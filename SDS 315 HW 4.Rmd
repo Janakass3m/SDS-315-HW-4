@@ -1,0 +1,247 @@
+---
+title: "SDS 315 HW 4"
+author: "Jana Kassem"
+date: "2024-02-17"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+EID: jmk4958
+
+Github Link: <https://github.com/Janakass3m/SDS-315-HW-4>.
+
+# 1
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+#load packages
+library(ggplot2)
+library(dplyr)
+library(mosaic)
+library(kableExtra)
+
+#Import Excel sheet as a dataset
+gas <- read.csv("GasPrices.csv")
+```
+
+### Part A
+
+The theory for this questions claims that gas stations without any competitors in sight charge more because they have less direct competition. This makes them the only option and therefore they can raise the prices to charge more. 
+
+```{r echo=FALSE, warning=FALSE}
+popmean = mean(Price ~ Competitors, data=gas)
+diffpopmean = diffmean(Price ~ Competitors, data=gas)
+boot_comp_gas = do(10000)*diffmean(Price ~ Competitors, data=resample(gas))
+store = confint(boot_comp_gas, level = 0.95)
+ggplot(boot_comp_gas) + 
+  geom_histogram(aes(x=diffmean), bins=35) + labs(title = "Bootstrap Difference in Prices Between Gas Stations with and without Comp") + theme(plot.margin = margin(t = 20, r = 20, b = 20, l = 20))
+
+```
+
+The mean price difference between gas stations without competitors and gas stations with competitors is approximately -0.02348, indicating that gas stations without nearby competitors have a higher mean price by about 2 cents per gallon from the data. However, when this difference is calculated using 10,000 samples from the population, the 95% confidence interval for the difference in mean price between gas stations with and without competitors is between -0.055 and 0.008. 
+Since this confidence interval includes zero, we cannot conclude that the difference is statistically significant at the 5% level. Therefore, the theory that gas stations with no competitors charge more than gas stations with competitors is not supported by the data.
+
+### Part B
+
+The theory for this questions claims that gas stations in richer areas will charge more because people in these areas are more inclined to pay a higher price because of convenience rather than search for cheaper gas. 
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+boot_rich_gas = do(10000)*lm(Price ~ Income, data=mosaic::resample(gas))
+
+storerich <- confint(boot_rich_gas, level = 0.95)
+
+ggplot(gas) + 
+  geom_jitter(aes(x=Income, y=Price), alpha=0.1) + 
+  geom_smooth(aes(x=Income, y=Price), method='lm') + theme(plot.margin = margin(t = 20, r = 20, b = 20, l = 20)) + labs(title = 'Relationship Between Income and Gas Prices')
+
+
+```
+
+When this difference is calculated using 10,000 samples from the population, the 95% confidence interval for the difference in price for every increase in dollar is between 6.455632e-07 and 1.759311e-06. Since this confidence interval does not include zero, we can conclude that the difference is statistically significant at the 5% level. Therefore, the theory that gas stations in richer areas will charge more is supported by the data.
+
+
+### Part C
+
+The theory for this questions claims that gas stations at stoplights charge more. This might be because people are more likely to pull in if they're already stopped at the light. 
+
+```{r echo=FALSE, warning=FALSE}
+popmeanlight = mean(Price ~ Stoplight, data=gas)
+diffpopmeanlight = diffmean(Price ~ Stoplight, data=gas)
+boot_light_gas = do(10000)*diffmean(Price ~ Stoplight, data=resample(gas))
+storelight = confint(boot_light_gas, level = 0.95)
+ggplot(boot_light_gas) + 
+  geom_histogram(aes(x=diffmean), bins=35) + labs(title = "Bootstrap Difference in Prices Between Gas Stations Stoplight Status") + theme(plot.margin = margin(t = 20, r = 20, b = 20, l = 20))
+```
+
+The mean price difference between gas stations at stoplights and gas stations not at stop lights is -0.0033, indicating that gas stations not at stoplights have a higher mean price by about .33 cents per gallon from the data. However, when this difference is calculated using 10,000 samples from the population, the 95% confidence interval for the difference in mean price between gas stations at stoplights and gas stations not at stoplights is between -0.0386 and 0.0314. 
+Since this confidence interval includes zero, we cannot conclude that the difference is statistically significant at the 5% level. Therefore, the theory that gas stations at stoplights charge more is not supported by the data.
+
+### Part D
+
+The theory for this questions claims that gas stations with direct highway access charge more.
+
+```{r echo=FALSE, warning=FALSE}
+popmeanhigh = mean(Price ~ Highway, data=gas)
+diffpopmeanhigh = diffmean(Price ~ Highway, data=gas)
+boot_high_gas = do(10000)*diffmean(Price ~ Highway, data=resample(gas))
+storehigh = confint(boot_high_gas, level = 0.95)
+ggplot(boot_high_gas) + 
+  geom_histogram(aes(x=diffmean), bins=35) + labs(title = "Bootstrap Difference in Prices Between Gas Stations with Highway Access") + theme(plot.margin = margin(t = 20, r = 20, b = 20, l = 20))
+```
+
+The mean price difference between gas stations with access to highway is .0457, indicating that gas stations with access to the highway have a higher mean price by about 5 cents per gallon from the data. However, when this difference is calculated using 10,000 samples from the population, the 95% confidence interval for the difference in mean price between gas stations with access to highways and gas stations without is between 0.0086 and 0.0817. 
+Since this confidence interval does not include zero, we can conclude that the difference is statistically significant at the 5% level. Therefore, the theory that gas stations with access to highways charge more is supported by the data.
+
+### Part E
+
+The theory for this questions claims that Shell charges more than other brands. 
+
+```{r echo=FALSE, warning=FALSE}
+gas$Shell <- ifelse(gas$Brand == "Shell", "Y", "N")
+popmeanshell = mean(Price ~ Shell, data=gas)
+diffpopmeanshell = diffmean(Price ~ Shell, data=gas)
+boot_shell_gas = do(10000)*diffmean(Price ~ Shell, data=resample(gas))
+storeshell = confint(boot_shell_gas, level = 0.95)
+ggplot(boot_shell_gas) + 
+  geom_histogram(aes(x=diffmean), bins=35) + labs(title = "Bootstrap Difference in Prices Between Shell stations and Non-Shell") + theme(plot.margin = margin(t = 20, r = 20, b = 20, l = 20))
+
+```
+
+The mean price difference between Shell gas stations and non-shell gas stations is 0.0274, indicating that Shell gas stations have a higher mean price by about 3 cents per gallon from the data. However, when this difference is calculated using 10,000 samples from the population, the 95% confidence interval for the difference in mean price between Shell gas stations and non-shell gas stations is between -0.0102 and 0.0653. 
+Since this confidence interval does include zero, we can't conclude that the difference is statistically significant at the 5% level. Therefore, the theory that Shell gas stations charge more is not supported by the data.
+
+# 2
+```{r echo=FALSE, warning=FALSE}
+sclass <- read.csv("sclass.csv")
+```
+
+### Part A
+
+```{r echo=FALSE, warning=FALSE}
+filter_partA <- sclass %>%
+  filter(year == 2011, trim == "63 AMG")
+
+boot_sclass_a <- do(10000) * mean(~mileage, data = mosaic::resample(filter_partA))
+storeclassa <- confint(boot_sclass_a, level = 0.95)
+
+```
+
+The 95% confidence interval for the average mileage of 2011 S-Class 63 AMGs that were hitting the used-car market when this data was collected is between 26210 and 31722 mpg. Since this confidence interval does not include zero, we can conclude that the difference is statistically significant at the 5% level.
+
+### Part B
+
+```{r echo=FALSE, warning=FALSE}
+filter_partB <- sclass %>%
+  filter(year == 2014, trim == "550") %>%
+  mutate(isBlack = ifelse(color == "Black", TRUE, FALSE))
+
+
+boot_sclass_b <- do(10000) * prop(~isBlack, data = mosaic::resample(filter_partB))
+storeclassb <- confint(boot_sclass_b, level = 0.95)
+
+```
+
+The 95% confidence interval for the proportion of all 2014 S-Class 550's that were painted black is in between 41.7 and 45.3%.  Since this confidence interval does not include zero, we can conclude that the difference is statistically significant at the 5% level.
+
+# 3
+```{r echo=FALSE, warning=FALSE}
+nbc <- read.csv("nbc_pilotsurvey.csv")
+```
+
+### Part A
+
+Question: Who makes people more happier? Ed from "Living with Ed" or Earl from "My Name is Earl." Is there evidence that one show consistently produces a higher mean Q1_Happy response among viewers.
+
+Approach: I will filter the data set to just show the two shows. I will then bootstrap the data to calculate a 95% confidence interval in mean difference (diffmean) in response of question 1 among viewers. 
+
+Results:
+
+```{r echo=FALSE, warning=FALSE}
+filter_happy <- nbc %>%
+  filter(Show == 'Living with Ed'| Show == "My Name is Earl")
+
+popmeanhappy = mean(Q1_Happy ~ Show, data=filter_happy)
+diffpopmeanhappy = diffmean(Q1_Happy ~ Show, data=filter_happy)
+boot_happy = do(10000)*diffmean(Q1_Happy ~ Show, data=resample(filter_happy))
+storehappy = confint(boot_happy, level = 0.95)
+ggplot(boot_happy) + 
+  geom_histogram(aes(x=diffmean), bins=35) + labs(title = "Bootstrap Difference in Happines with Ed vs Earl") + theme(plot.margin = margin(t = 20, r = 20, b = 20, l = 20))
+
+```
+
+The mean happiness difference between 'Living with Ed' viewers and 'My Name is Earl' viewers is -.149, indicating that Ed viewers have a higher mean happiness by about .149 than Earl viewers from the data. When this difference is calculated using 10,000 samples from the population, the 95% confidence interval for the difference in mean happiness between Ed and Earl viewers is between -0.397 and 0.1068.
+
+Conclusion: There is no evidence that one show consistently produces a higher mean happiness response because the confidence interval contains 0. This means that the data is not statistically significant enough to draw a conclusion.
+
+### Part B
+
+Question: Between “The Biggest Loser” and “The Apprentice: Los Angeles," which show made more people feel annoyed? Is there evidence that one show consistently produces a higher mean Q1_Annoyed response among
+viewers?
+
+Approach: I will filter the data set to only show the two reality shows. I will then bootstrap the data to calculate a 95% confidence interval in difference in mean (diff mean) of Q1_annoyed by show. 
+
+Results:
+
+```{r echo=FALSE, warning=FALSE}
+filter_annoyed <- nbc %>%
+  filter(Show ==  'The Biggest Loser'| Show == "The Apprentice: Los Angeles")
+
+popmeanannoyed = mean(Q1_Annoyed ~ Show, data=filter_annoyed)
+diffpopmeanannoyed = diffmean(Q1_Annoyed ~ Show, data=filter_annoyed)
+boot_annoyed = do(10000)*diffmean(Q1_Annoyed ~ Show, data=resample(filter_annoyed))
+storeannoyed = confint(boot_annoyed, level = 0.95)
+ggplot(boot_annoyed) + 
+  geom_histogram(aes(x=diffmean), bins=35) + labs(title = "Bootstrap Difference in Annoyance from Reality TV")
+```
+
+The mean annoyance difference between 'The Apprentice: Los Angeles' viewers and 'The Biggest Loser' viewers is -.271, indicating that 'The Apprentice' viewers have a higher mean annoyance by about .271 than "The Biggest Loser" viewers from the data. When this difference is calculated using 10,000 samples from the population, the 95% confidence interval for the difference in mean annoyance between "The Apprentice" and "the Biggest Loser" viewers is between -0.5263 and -0.0192.
+
+Conclusion: There is evidence that one show consistently produces a higher mean annoyance response because the confidence interval doesn't contain 0. This means that the data is statistically significant at the 5% level to be able to draw a conclusion that 'The Apprentice: Los Angeles' made viewers more annoyed.
+
+### Part C
+
+Question: Is "Dancing with the Stars" a confusing show to Americans? What proportion of American TV watchers would we expect to give a
+response of 4 or greater to the “Q2_Confusing” question? 
+
+Approach: I will filter (filter) the data set to only show the results for "Dancing with the Starts". I will then create a new variable (mutate) called "isConf" to produce true if the response to 'Q2_Confusing' is equal to or greater than 4. I will then perform a boostrap the dats to calculate a 95% confidence interval in proportion (prop) of people that find the show confusing.
+
+Results:
+
+```{r echo=FALSE, warning=FALSE}
+filter_confusing <- nbc %>%
+  filter(Show == "Dancing with the Stars") %>%
+  mutate(isConf = ifelse(Q2_Confusing >= 4, TRUE, FALSE))
+
+propconf = prop(~isConf, data = filter_confusing)
+
+boot_conf <- do(10000) * prop(~isConf, data = mosaic::resample(filter_confusing))
+storeconfused <- confint(boot_conf, level = 0.95)
+
+```
+
+The proportion of confused viewers from the sample is .0773, indicating that 7.7% of viewers find the show confusing. When the proportion is calculated using 10,000 samples from the population, the 95% confidence interval for the proportion of people who find "Dancing with the Stars" confusing is between 3.87% and 11.6%.
+
+Conclusion: From a 95% confidence interval we would expect between 3.87% and 11.6% American TV-watchers to respond to the question with a 4 or higher. Because the confidence interval doesn't contain 0 this means that the data is statistically significant at the 5% level to be able to draw a conclusion f
+
+# 4
+
+Question: The question is whether Ebay's paid search advertising on Google's AdWords platform is driving enough extra revenue for Ebay to switch instead of being "organic".
+Approach: I will mutate the data to calculate the revenue ratio for each DMA. I will group by weather the data is treatment or control and the calculate the diff mean revenue ratio. I will conduct 10,000 Monte carlo simulations and bootstrap the data to calculate the difference in mean revenue ratio.
+```{r echo=FALSE, warning=FALSE}
+ebay <- read.csv("ebay.csv")
+
+meanebay = mean(rev_ratio ~ adwords_pause, data=ebay)
+diffmeanebay = diffmean(rev_ratio ~adwords_pause, data = ebay)
+
+boot_ebay <- do(10000) * diffmean(rev_ratio~adwords_pause, data = mosaic::resample(ebay))
+storeebay <- confint(boot_ebay, level = 0.95)
+
+```
+
+Result: The mean ratio difference between treatment group and control group DMA's is  -.0523, indicating that the control DMA's have a higher mean ratio by about .0523 than the treatment group from the data. When this difference is calculated using 10,000 samples from the population, the 95% confidence interval for the difference in mean ratio between the treatment and control group is between -0.0909 and -0.0128.
+
+Conclusion: The confidence interval doesn't include zero indicating that the difference is statistically significant at the 5% level. From this we can conclude that EBay's paid search advertising on Google's AdWords platform has a statistically significant impact on EBay's revenue. This finding supports the effectiveness of EBay's paid search advertising strategy on Google's AdWords platform.
